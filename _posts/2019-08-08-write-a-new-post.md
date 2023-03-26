@@ -5,6 +5,7 @@ date: 2019-08-08 14:10:00 +0800
 categories: [Jekyll, Tutorial]
 tags: [jekyll, github]
 render_with_liquid: false
+comments: true
 ---
 
 <span style="color:grey">[Jekyll(chirpy theme) write-a-new-post.md](https://github.com/cotes2020/jekyll-theme-chirpy/blob/master/_posts/2019-08-08-write-a-new-post.md) 해당 글을 번역 및 요약하여 작성한 포스트 입니다.</span>

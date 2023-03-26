@@ -20,7 +20,7 @@ timezone: Asia/Seoul
 
 title: Jun97 # the main title
 
-tagline: devlog # it will display as the sub-title
+tagline: 준석 devlog # it will display as the sub-title
 
 description: >- # used by seo meta and the atom feed
   A minimal, responsive and feature-rich Jekyll theme for technical writing.
@@ -70,7 +70,7 @@ google_analytics:
 #     light  - Use the light color scheme
 #     dark   - Use the dark color scheme
 #
-theme_mode: # [light|dark]
+theme_mode: light
 
 # The CDN endpoint for images.
 # Notice that once it is assigned, the CDN url
