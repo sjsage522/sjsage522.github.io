@@ -1,21 +1,22 @@
 ---
-title: Writing a New Post
-author: cotes
+title: (Jekyll) [Github 블로그, chirpy 테마] 지킬에 글쓰기
+author: jun
 date: 2019-08-08 14:10:00 +0800
-categories: [Blogging, Tutorial]
-tags: [writing]
+categories: [Jekyll, Tutorial]
+tags: [jekyll, github]
 render_with_liquid: false
 ---
 
-This tutorial will guide you how to write a post in the _Chirpy_ template, and it's worth reading even if you've used Jekyll before, as many features require specific variables to be set.
+<span style="color:grey">[Jekyll(chirpy theme) write-a-new-post.md](https://github.com/cotes2020/jekyll-theme-chirpy/blob/master/_posts/2019-08-08-write-a-new-post.md) 해당 글을 번역 및 요약하여 작성한 포스트 입니다.</span>
 
 ## Naming and Path
 
-Create a new file named `YYYY-MM-DD-TITLE.EXTENSION`{: .filepath} and put it in the `_posts`{: .filepath} of the root directory. Please note that the `EXTENSION`{: .filepath} must be one of `md`{: .filepath} and `markdown`{: .filepath}. If you want to save time of creating files, please consider using the plugin [`Jekyll-Compose`](https://github.com/jekyll/jekyll-compose) to accomplish this.
+`_posts`{: .filepath} 디렉토리 아래에 `YYYY-MM-DD-TITLE.EXTENSION`{: .filepath} 형식의 파일을 생성합니다.
+`EXTENSION`{: .filepath}은 반드시 `md`{: .filepath}나 `markdown`{: .filepath}중 하나여야 합니다.
 
 ## Front Matter
 
-Basically, you need to fill the [Front Matter](https://jekyllrb.com/docs/front-matter/) as below at the top of the post:
+글의 최상단에서는 다음과 같이 시작합니다. ([Front Matter](https://jekyllrb.com/docs/front-matter/))
 
 ```yaml
 ---
@@ -27,15 +28,15 @@ tags: [TAG]     # TAG names should always be lowercase
 ```
 
 > The posts' _layout_ has been set to `post` by default, so there is no need to add the variable _layout_ in the Front Matter block.
-{: .prompt-tip }
+> {: .prompt-tip }
 
 ### Timezone of Date
 
-In order to accurately record the release date of a post, you should not only set up the `timezone` of `_config.yml`{: .filepath} but also provide the post's timezone in variable `date` of its Front Matter block. Format: `+/-TTTT`, e.g. `+0800`.
+포스트 릴리즈 시간을 정확하게 기록하기 위해서, `_config.yml`{: .filepath} 파일에서 타임존(timezone: Asia/Seoul)을 세팅하고 Front Matter의 `date` Format(`+/-TTTT`, e.g. `+0800`.)을 설정하여 포스팅합니다.
 
 ### Categories and Tags
 
-The `categories` of each post are designed to contain up to two elements, and the number of elements in `tags` can be zero to infinity. For instance:
+ `categories` 는 최대 2개까지 설정할 수 있으며, `tags` 는 0~제한없음 까지 설정할 수 있습니다. (tag는 항상 소문자로 작성되야 합니다)
 
 ```yaml
 ---
@@ -46,9 +47,9 @@ tags: [bee]
 
 ### Author Information
 
-The author information of the post usually does not need to be filled in the _Front Matter_ , they will be obtained from variables `social.name` and the first entry of `social.links` of the configuration file by default. But you can also override it as follows:
+게시물의 작성자 정보는 일반적으로 Front Matter 에 채울 필요가 없으며 기본적으로 `_config.yml`의 `social.name`와 `social.links`에서 가져옵니다. 그러나 다음과 같이 재정의할 수도 있습니다.
 
-Adding author information in `_data/authors.yml` (If your website doesn't have this file, don't hesitate to create one).
+`_data/authors.yml`에 작성자 정보 추가(해당 파일이 없다면 생성해줍니다)
 
 ```yaml
 <author_id>:
@@ -58,8 +59,7 @@ Adding author information in `_data/authors.yml` (If your website doesn't have t
 ```
 {: file="_data/authors.yml" }
 
-
-And then use `author` to specify a single entry or `authors` to specify multiple entries:
+그리고나서, [Front Matter](https://jekyllrb.com/docs/front-matter/)에 다음과 같이 작성할 수 있습니다.
 
 ```yaml
 ---
@@ -68,12 +68,6 @@ author: <author_id>                     # for single entry
 authors: [<author1_id>, <author2_id>]   # for multiple entries
 ---
 ```
-
-
-Having said that, the key `author` can also identify multiple entries.
-
-> The benefit of reading the author information from the file `_data/authors.yml`{: .filepath } is that the page will have the meta tag `twitter:creator`, which enriches the [Twitter Cards](https://developer.twitter.com/en/docs/twitter-for-websites/cards/guides/getting-started#card-and-content-attribution) and is good for SEO.
-{: .prompt-info }
 
 ## Table of Contents
 
@@ -141,7 +135,7 @@ In order to prevent the page content layout from shifting when the image is load
 {: .nolineno}
 
 > For an SVG, you have to at least specify its _width_, otherwise it won't be rendered.
-{: .prompt-info }
+> {: .prompt-info }
 
 Starting from _Chirpy v5.0.0_, `height` and `width` support abbreviations (`height` → `h`, `width` → `w`). The following example has the same effect as the above:
 
@@ -155,7 +149,7 @@ Starting from _Chirpy v5.0.0_, `height` and `width` support abbreviations (`heig
 By default, the image is centered, but you can specify the position by using one of the classes `normal`, `left`, and `right`.
 
 > Once the position is specified, the image caption should not be added.
-{: .prompt-warning }
+> {: .prompt-warning }
 
 - **Normal position**
 
@@ -333,9 +327,9 @@ There are several types of prompts: `tip`, `info`, `warning`, and `danger`. They
 Markdown symbols ```` ``` ```` can easily create a code block as follows:
 
 ````md
-```
+​```
 This is a plaintext code snippet.
-```
+​```
 ````
 
 #### Specifying Language
@@ -343,22 +337,22 @@ This is a plaintext code snippet.
 Using ```` ```{language} ```` you will get a code block with syntax highlight:
 
 ````markdown
-```yaml
+​```yaml
 key: value
-```
+​```
 ````
 
 > The Jekyll tag `{% highlight %}` is not compatible with this theme.
-{: .prompt-danger }
+> {: .prompt-danger }
 
 #### Line Number
 
 By default, all languages except `plaintext`, `console`, and `terminal` will display line numbers. When you want to hide the line number of a code block, add the class `nolineno` to it:
 
 ````markdown
-```shell
+​```shell
 echo 'No more line numbers!'
-```
+​```
 {: .nolineno }
 ````
 
@@ -367,9 +361,9 @@ echo 'No more line numbers!'
 You may have noticed that the code language will be displayed at the top of the code block. If you want to replace it with the file name, you can add the attribute `file` to achieve this:
 
 ````markdown
-```shell
+​```shell
 # content
-```
+​```
 {: file="path/to/file" }
 ````
 
@@ -379,11 +373,11 @@ If you want to display the **Liquid** snippet, surround the liquid code with `{%
 
 ````markdown
 {% raw %}
-```liquid
+​```liquid
 {% if product.title contains 'Pack' %}
   This product's title contains the word Pack.
 {% endif %}
-```
+​```
 {% endraw %}
 ````
 
@@ -400,10 +394,10 @@ Where `Platform` is the lowercase of the platform name, and `ID` is the video ID
 
 The following table shows how to get the two parameters we need in a given video URL, and you can also know the currently supported video platforms.
 
-| Video URL                                                                                          | Platform  | ID            |
-|----------------------------------------------------------------------------------------------------|-----------|:--------------|
+| Video URL                                | Platform  | ID            |
+| ---------------------------------------- | --------- | :------------ |
 | [https://www.**youtube**.com/watch?v=**H-B46URT4mg**](https://www.youtube.com/watch?v=H-B46URT4mg) | `youtube` | `H-B46URT4mg` |
-| [https://www.**twitch**.tv/videos/**1634779211**](https://www.twitch.tv/videos/1634779211)         | `twitch`  | `1634779211`  |
+| [https://www.**twitch**.tv/videos/**1634779211**](https://www.twitch.tv/videos/1634779211) | `twitch`  | `1634779211`  |
 
 
 
