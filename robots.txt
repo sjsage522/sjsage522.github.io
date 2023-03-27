@@ -1,3 +1,0 @@
-User-agent: *
-Allow: /
-Sitemap: https://sjsage522.github.io/sitemap.xml
