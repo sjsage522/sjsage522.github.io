@@ -1,7 +1,7 @@
 ---
 title: (Jekyll) [Github 블로그, chirpy 테마] 지킬에 글쓰기
 author: jun
-date: 2019-08-08 14:10:00 +0800
+date: 2019-08-08 14:10:00 +0900
 categories: [Jekyll, Tutorial]
 tags: [jekyll, github]
 render_with_liquid: false
