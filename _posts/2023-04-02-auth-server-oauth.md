@@ -1,9 +1,9 @@
 ---
 title: (SpringBoot) [Oauth2.0, JWT] 소셜로그인 기능 구현하기(인증서버 구축하기)
 author: jun
-date: 2023-04-02 17:05:00 +0900
+date: 2023-04-03 00:37:00 +0900
 categories: [SpringBoot, Feature]
-tags: [jwt, oauth2.0, springboot]
+tags: [jwt, oauth, springboot]
 render_with_liquid: false
 comments: true
 img_path: /assets/img/post/20230402/
