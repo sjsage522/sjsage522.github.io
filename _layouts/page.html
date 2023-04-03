@@ -64,29 +64,4 @@ layout: default
 
 {% if page.comments %}
 <div id="disqus_thread"></div>
-<script>
-  var disqus_config = function () {
-    this.page.url = 'https://sjsage522.github.io{{ page.url }}';
-    this.page.identifier = '{{ page.id }}';
-  };
-  (function() {
-    var d = document, s = d.createElement('script');
-    // s.src = 'https://https-sjsage522-github-io.disqus.com/embed.js';
-    // s.setAttribute('data-timestamp', +new Date());
-    // (d.head || d.body).appendChild(s);
-  })();
-
-  var changeThread = function (newIdentifier, newUrl, newTitle, newLanguage) {
-    DISQUS.reset({
-      reload: true,
-      config: function () {
-        this.page.identifier = newIdentifier;
-        this.page.url = newUrl;
-        this.page.title = newTitle;
-        this.language = newLanguage;
-      }
-    });
-  };
-</script>
-<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
 {% endif %}
