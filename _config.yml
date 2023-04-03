@@ -18,7 +18,8 @@ timezone: Asia/Seoul
 # jekyll-seo-tag settings › https://github.com/jekyll/jekyll-seo-tag/blob/master/docs/usage.md
 # ↓ --------------------------
 
-title: 준석 devlog # the main title
+title: >- # used by seo meta and the atom feed
+    준석 devlog # the main title
 
 tagline: Jun97 # it will display as the sub-title
 
