@@ -42,6 +42,8 @@ dependencies {
 
 ## Oauth2.0 프로토콜
 
+[Oauth2.0 Authorization Code Grant](/posts/oauth-authorization-code/) 방식으로 구현하였습니다. 
+
 ## JWT (Json Web Token)
 
 ## 구글 서비스 등록하기
