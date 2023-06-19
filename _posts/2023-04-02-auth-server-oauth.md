@@ -167,48 +167,46 @@ _Oauth2.0 동작과정_
 
 ### Resource Owner의 로그인 요청
 
-Resource Owner(사용자)는 구글, 카카오 등과 같은 **소셜 서비스에 대한 로그인 요청**을 하게됩니다. 해당 요청을 처리하는 컨트롤러(OAuth2LoginController)를 구현합니다.
+Resource Owner(사용자)는 구글, 카카오 등과 같은 **소셜 서비스에 대한 로그인 요청**을 하게됩니다. 해당 요청을 처리하는 컨트롤러([OAuth2LoginRestController](https://github.com/sjsage522/member/blob/main/src/main/java/com/junseok/member/oauth/OAuth2LoginRestController.java))를 구현합니다.
 
 ```java
 package com.junseok.member.oauth;
 
-import com.junseok.member.common.property.JwtProperty;
+import com.junseok.member.common.ApiResult;
 import com.junseok.member.common.property.OAuthProperty;
-import com.junseok.member.common.validation.annotation.UrlValid;
+import com.junseok.member.oauth.dto.AuthTokenResponse;
 import com.junseok.member.util.CookieUtils;
 import com.junseok.member.util.SessionScopeUtils;
 
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
-import javax.validation.Valid;
 import java.io.IOException;
 
 @Validated
 @RequiredArgsConstructor
-@RequestMapping("/oauth2/authorize")
+@RequestMapping("/api/v2/oauth2")
 @RestController
-public class OAuth2LoginController {
+public class OAuth2LoginRestController {
     private final OAuth2LoginService oauth2LoginService;
     private final CookieUtils cookieUtils;
     private final SessionScopeUtils sessionScopeUtils;
     private final OAuthProperty oauthProperty;
-    private final JwtProperty jwtProperty;
 
     /**
-     * @param redirectUri 클라이언트 redirect uri
      * @return resource server authorization 301 redirect
      * @throws IOException
      */
-    @GetMapping("/{service_provider}")
-    public void authorizeService(@PathVariable(value = "service_provider") String serviceProvider, @RequestParam(value="redirect_uri") @Valid @UrlValid String redirectUri, HttpServletResponse response) throws IOException {
+    @GetMapping("/authorize/{service_provider}")
+    public void authorizeService(@PathVariable(value = "service_provider") String serviceProvider, HttpServletResponse response) throws IOException {
         String authorizeUri = oauth2LoginService.getAuthorizeUri(serviceProvider);
 
-        cookieUtils.addCookie("redirect_uri", redirectUri, oauthProperty.getCookiePath(), oauthProperty.getCookieMaxAge());
         cookieUtils.addCookie("service_provider", serviceProvider, oauthProperty.getCookiePath(), oauthProperty.getCookieMaxAge());
-
         response.sendRedirect(authorizeUri);
     }
 
@@ -220,9 +218,8 @@ public class OAuth2LoginController {
      * @param state             CSRF 방어 state value
      * @throws IOException
      */
-    @GetMapping("/login/callback")
-    public void loginCallback(
-            @CookieValue(value = "redirect_uri") String redirectUri,
+    @GetMapping("/authorize/login/callback")
+    public ResponseEntity<ApiResult<AuthTokenResponse>> loginCallback(
             @CookieValue(value = "service_provider") String serviceProvider,
             @RequestParam(value = "code") String authorizationCode,
             @RequestParam(value = "state") String state,
@@ -237,10 +234,15 @@ public class OAuth2LoginController {
         String jwt = oauth2LoginService.createJwt(providerAccessToken, serviceProvider);
         String refreshToken = oauth2LoginService.createRefreshToken();
 
-        cookieUtils.addCookie("auth_token", jwt, "/", jwtProperty.getCookieMaxAge());
-        cookieUtils.addCookie("auth_refresh", refreshToken, "/", jwtProperty.getCookieMaxAge());
+        AuthTokenResponse token = AuthTokenResponse.builder()
+            .jwt(jwt)
+            .refreshToken(refreshToken)
+            .build();
         
-        response.sendRedirect(redirectUri);
+        return new ResponseEntity<>(
+                ApiResult.succeed(token),
+                HttpStatus.OK
+        );
     }
 }
 ```
@@ -249,22 +251,14 @@ public class OAuth2LoginController {
 
 #### authorizeService 메소드 요청
 
-1. 사용자는 소셜 로그인을 위해 클라이언트 앱으로 다음과 같은 리소스로 HTTP 요청을 합니다. <br/>
+1. 사용자는 소셜 로그인을 위해 클라이언트 앱에서 다음과 같은 리소스로 HTTP 요청을 합니다. <br/>
    <u>GET /oauth2/authorize/kakao?redirect_uri=https://example.com</u>
 
-2. oauth2LoginService.getAuthorizeUri 메소드로 부터 리디렉션할 uri를 얻고, 브라우저 쿠키에 <u>redirect_uri, service_provider</u> 정보를 저장합니다. <br/>
-
-   > **redirect_uri란?** <br/>
-   > OAuth 동작 과정중 AuthorizationServer로 부터 AccessToken을 발급 받고 DB에 저장한 후(로그인 성공처리), 사용자를 리디렉션 시켜줄 uri입니다.
-
-   > **service_provider란?** <br/>
-   > google, kakao 와 같은 리소스 제공자를 의미합니다. AuthorizationCode 또는 AccessToken을 얻을 때 해당 값을 사용합니다.
-
-   > service layer에서는 csrf 공격 방지를 위한 state값을 세션에 저장합니다.
-   >
-   > 이러한 처리는 필수사항은 아니지만, 보안 취약점 공격을 방어하기 위해서 구현을 강력히 권장합니다. 
-
-3. 사용자를 소셜 로그인 화면으로 리디렉션 시킵니다.
+   > **redirect_uri** <br/>사용자가 소셜 로그인 화면에서 로그인을 정상적으로 완료한 후, 인증 코드로 토큰을 발급받기 위해 클라이언트 앱으로 다시 리다이텍트 시켜줄 url 입니다.
+   
+   > **state**<br/>service layer에서는 csrf 공격 방지를 위한 state값을 세션에 저장합니다.
+   
+3. 사용자를 소셜 로그인 화면으로 리다이렉트 시킵니다.
 
 ### ID/PW 제공 및 Authorization Code 발급
 
@@ -283,15 +277,7 @@ _카카오 로그인 화면_
 
 2. oauth2LoginService.getAccessToken 메소드에서 인증 서버로 부터 AccessToken(JWT)를 얻고, 클라이언트 앱에서 사용하기 위한 JWT와 RefreshToken을 생성합니다.
 
-   > JWT와 RefreshToken는 클라이언트의 쿠키에 저장하도록 합니다. <br/>
-   > 해당 값들을 클라이언트에 저장하는 방법은 여러가지가 있지만, 필자는 HTTP only 속성의 쿠키로 저장하는 것이 보안상 안전하다고 생각합니다.
-   >
-   > 단, 이렇게 저장하게 되면 CSRF(*Cross Site Request Forgery*)공격을 방지하기 위한 보안코딩이 필수로 요구됩니다. <br/>일회성 토큰(csrf token)을 이용하거나, 레퍼러 체크 등의 방법으로 보안코드를 구현하도록 합니다. <br/>
-   > 또한, 자바스크립트 코드를 이용해 민감한 정보가 탈취당하지 않도록 XSS(*Cross Site Scripting*)에 대한 보안코드도 구현하도록 합니다.
-
-3. 쿠키로 전달된 redirect_uri로 사용자를 리디렉션 시켜주면서, 로그인 과정을 완료합니다.
-
-   1. 이제부터 인증이 필요한 리소스 요청에 대해서, 쿠키에 저장되어 있는 토큰을 이용해 인증과정을 거치게 됩니다.
+3. 클라이언트로 생성한 토큰 정보를 리턴해줍니다.
 
 <br/>
 
@@ -303,7 +289,7 @@ _카카오 로그인 화면_
 
 service layer에서 어떤식으로 사용자에게 로그인 페이지를 제공하고, 인증 코드를 이용해 AccessToken을 얻는지 확인 해봅니다.
 
-전체 코드는 다음과 같습니다.
+[전체 코드](https://github.com/sjsage522/member/blob/main/src/main/java/com/junseok/member/oauth/OAuth2LoginService.java)는 다음과 같습니다.
 
 ```java
 package com.junseok.member.oauth;
@@ -491,9 +477,8 @@ public class OAuth2LoginService {
 
 Oauth와 관련된 변수들은 관리에 용이하도록 프로퍼티로 관리해줍니다.
 
-> 각 서비에 등록된 redirectUri와 쿼리파라미터의 redirectUri는 동일해야 합니다.
+> 인증 서비스에 등록한 redirectUri와 쿼리파라미터의 redirectUri는 동일해야 합니다.
 >
-> 악의적인 누군가들은 redirectUri를 유추할 수도 있습니다. 때문에, 보안강화(CSRF 공격 방지)를 위해서 state값을 추가로 전달해줍니다. 이 state값은 인증서버에서 redirectUri로 리디렉션할때 쿼리파라미터로 함께 전달해줍니다. <br/>따라서, 클라이언트 앱에서 검증로직을 직접구현해야 합니다.
 
 ### getAccessToken 메소드
 
@@ -503,7 +488,9 @@ Oauth와 관련된 변수들은 관리에 용이하도록 프로퍼티로 관리
 
 해당 요청은 POST 요청입니다. 따라서, body정보에 발급받은 <u>클라이언트 ID, 클라이언 비밀 키(Secret Key)와 인증코드, grant_type("authorization_code" 고정)</u>을 담아 요청합니다.
 
-응답 데이타를 JSON 형식으로 변환 후, id_token값을 얻어 리턴합니다. 이 값이 각 서비스에서 제공한 JWT 입니다.
+응답 데이타를 JSON 형식으로 변환 후, id_token값을 얻어 리턴합니다.
+
+> [id_token](https://auth0.com/docs/authenticate/protocols/openid-connect-protocol#openid-vs-oauth2)은 각 서비스에서 제공한 JWT 입니다.
 
 ### createJwt 메소드
 
@@ -529,16 +516,14 @@ JWT, Oauth의 관한 변수들을 프로퍼티로 관리합니다. [이곳](http
 
 <br/>
 
-## 인증 (Authentication)
+## SSO (Single Sign-On)
 
-[SSOController](https://github.com/sjsage522/member/blob/main/src/main/java/com/junseok/member/sso/SSOController.java) 클래스에서 인증 API를 구현합니다.<br/>사용자가 요청한 AccessToken(JWT)과 RefreshToken에 대한 유효성을 검증합니다.
+[SSOController](https://github.com/sjsage522/member/blob/main/src/main/java/com/junseok/member/sso/SSOController.java) 클래스에서 SSO API를 구현합니다.<br/>토큰을 재발급 하거나, 로그아웃 기능을 제공합니다.
 
 [SSOService](https://github.com/sjsage522/member/blob/main/src/main/java/com/junseok/member/sso/SSOService.java) 클래스에서 구체적인 검증로직을 작성합니다. 코드는 다음과 같습니다.
 
 ```java
 package com.junseok.member.sso;
-
-import java.util.Map;
 
 import javax.transaction.Transactional;
 
@@ -546,12 +531,10 @@ import com.junseok.member.util.RedisUtils;
 import org.springframework.stereotype.Service;
 
 import com.junseok.member.common.exception.ErrorCode;
-import com.junseok.member.common.exception.ExpiredRefreshTokenException;
 import com.junseok.member.common.exception.NotFoundRefreshTokenException;
-import com.junseok.member.common.property.JwtProperty;
 import com.junseok.member.oauth.RefreshToken;
 import com.junseok.member.oauth.RefreshTokenRepository;
-import com.junseok.member.util.CookieUtils;
+import com.junseok.member.oauth.dto.AuthTokenResponse;
 import com.junseok.member.util.JwtProvider;
 
 import lombok.RequiredArgsConstructor;
@@ -562,48 +545,27 @@ public class SSOService {
     private final JwtProvider jwtProvider;
     private final RefreshTokenRepository refreshTokenRepository;
 
-    private final CookieUtils cookieUtils;
-
-    private final JwtProperty jwtProperty;
-
     private final RedisUtils redisUtil;
 
-    @Transactional(dontRollbackOn = ExpiredRefreshTokenException.class)
-    public Boolean authentication(String accessToken, String refreshToken) {
-        if (jwtProvider.validateToken(accessToken)) {
-            return Boolean.TRUE;
-        }
+    @Transactional
+    public AuthTokenResponse refreshToken(String accessToken, String refreshToken) {
+        this.revokeToken(accessToken, refreshToken, false);
 
-        // Expired JWT -> Refresh Access Token
-        RefreshToken findRefreshToken = refreshTokenRepository.findByRefreshToken(refreshToken)
-            .orElseThrow(() -> new NotFoundRefreshTokenException(ErrorCode.NOT_FOUND_REFRESH_TOKEN));
-        
-        // Expired RefreshToken -> throw Error
-        if (findRefreshToken.isExpired()) {
-            refreshTokenRepository.delete(findRefreshToken);
-            throw new ExpiredRefreshTokenException(ErrorCode.EXPIRED_REFRESH_TOKEN);
-        }
-
-        Map<String, Object> payloads = jwtProvider.getPayload(accessToken);
-        String subject = (String) payloads.get("sub");
-        String email = (String) payloads.get("email");
-
-        // JWT, Refresh Token 재발급
-        String newAccessToken = jwtProvider.createToken(subject, email);
         RefreshToken newRefreshToken = jwtProvider.createRefreshToken();
+        String subject = jwtProvider.getSubject(accessToken);
+        String email = (String) jwtProvider.getPayload(accessToken).get("email");
+        String jwt = jwtProvider.createToken(subject, email);
 
-        findRefreshToken.update(newRefreshToken.getRefreshToken(), newRefreshToken.getExpiresTime());
-
-        cookieUtils.addCookie("auth_token", newAccessToken, "/", jwtProperty.getCookieMaxAge());
-        cookieUtils.addCookie("auth_refresh", newRefreshToken.getRefreshToken(), "/", jwtProperty.getCookieMaxAge());
-
-        return Boolean.TRUE;
+        return AuthTokenResponse.builder()
+            .jwt(jwt)
+            .refreshToken(newRefreshToken.getRefreshToken())
+            .build();
     }
 
     @Transactional
-    public Boolean revokeToken(String accessToken, String refreshToken) {
-        if (!jwtProvider.validateToken(accessToken)) {
-            return Boolean.FALSE; // Expired JWT
+    public Boolean revokeToken(String accessToken, String refreshToken, boolean validationRequired) {
+        if (validationRequired && !jwtProvider.validateToken(accessToken)) {
+            return Boolean.FALSE;
         }
 
         // delete refreshToken
@@ -620,13 +582,15 @@ public class SSOService {
 }
 ```
 
-### authentication 메소드
+```
+refreshToken
+```
 
-먼저, JWT가 유효한지 검증합니다. 만약 JWT가 유효하지 않다면 에러를 발생시킵니다.
-
-JWT가 만료되었다면, 리프레시토큰으로 재발급을 시도합니다. 만약, 디비에 리프레시토큰이 존재하지 않거나 만료되었다면, 에러를 발생시킵니다.
+### refreshToken 메소드
 
 리프레시토큰이 존재한다면, JWT와 리프레시 토큰을 새로 발급합니다.
+
+> JWT는 블랙리스트에 등록하여 만료시켜줍니다.
 
 ### revokeToken 메소드
 
@@ -644,12 +608,10 @@ JWT가 만료되었다면, 리프레시토큰으로 재발급을 시도합니다
 
 ## 레퍼런스
 
-[https://hudi.blog/oauth-2.0/](https://hudi.blog/oauth-2.0/)
+OAuth 2.0 개념과 동작원리<br/>[https://hudi.blog/oauth-2.0/](https://hudi.blog/oauth-2.0/)
 
+Redis를 이용한 JWT BlackList 구현<br/>[https://velog.io/@boo105/Redis-%EB%A5%BC-%ED%86%B5%ED%95%9C-JWT-Blacklist-%EA%B5%AC%ED%98%84](https://velog.io/@boo105/Redis-%EB%A5%BC-%ED%86%B5%ED%95%9C-JWT-Blacklist-%EA%B5%AC%ED%98%84)
 
+카카오 로그인<br/>[https://developers.kakao.com/docs/latest/ko/kakaologin/common](https://developers.kakao.com/docs/latest/ko/kakaologin/common)
 
-카카오 로그인에 대한 전반적인 내용이 담긴 문서입니다.<br/>[https://developers.kakao.com/docs/latest/ko/kakaologin/common](https://developers.kakao.com/docs/latest/ko/kakaologin/common)
-
-
-
-구글 Oauth2.0 엔드포인트에 대한 문서입니다.<br/>[https://developers.google.com/identity/protocols/oauth2/javascript-implicit-flow?hl=ko#oauth-2.0-endpoints](https://developers.google.com/identity/protocols/oauth2/javascript-implicit-flow?hl=ko#oauth-2.0-endpoints)
+구글 Oauth2.0 엔드포인트<br/>[https://developers.google.com/identity/protocols/oauth2/javascript-implicit-flow?hl=ko#oauth-2.0-endpoints](https://developers.google.com/identity/protocols/oauth2/javascript-implicit-flow?hl=ko#oauth-2.0-endpoints)
