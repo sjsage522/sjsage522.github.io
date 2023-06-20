@@ -87,7 +87,7 @@ target
 
 다음 명령으로 Doker Image를 빌드합니다.
 
-`--tag` 옵션을 통해 이미지에 이름 지정해줄 수 있습니다. (`-t`) 만약, 따로 태그명을 전달하지 않으면 `latest`로 지정됩니다.
+`--tag`(`-t`) 옵션을 통해 이미지에 태그를 지정해줄 수 있습니다. 만약, 따로 태그명을 전달하지 않으면 `latest`로 지정됩니다.
 
 ```bash
 docker build --tag java-docker .
